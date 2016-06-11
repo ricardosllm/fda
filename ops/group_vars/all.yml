@@ -1,0 +1,4 @@
+---
+app_name: "doktormota-wedding"
+
+bucket_name: "fda-{{ app_name }}"

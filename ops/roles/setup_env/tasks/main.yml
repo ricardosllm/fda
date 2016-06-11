@@ -1,0 +1,15 @@
+#  ---
+# - set_fact:
+#     deployment_env: "{{ lookup('env', 'AWS_PROFILE') }}"
+
+# - add_host:
+#     name: "localhost"
+#     groups: "{{ deployment_env }}"
+
+---
+- set_fact:
+    deployment_env: "{{ lookup('env', 'AWS_PROFILE') }}"
+
+- add_host:
+    name: "localhost"
+    groups: "{{ deployment_env }}"
