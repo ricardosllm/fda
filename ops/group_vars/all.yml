@@ -2,8 +2,11 @@
 app_name: "in-development"
 
 stack_name: "fda-{{ app_name }}-stack"
+
 aws:
   region: "eu-west-1" # must support all resources
+
+identityPoolName: "fda {{ app_name | regex_replace('-', ' ') }}"
 
 stackParameters:
   BucketName: "fda-{{ app_name }}"
