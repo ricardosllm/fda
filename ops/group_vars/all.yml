@@ -1,4 +1,9 @@
 ---
-app_name: "doktormota-wedding"
+app_name: "in-development"
 
-bucket_name: "fda-{{ app_name }}"
+stack_name: "fda-{{ app_name }}-stack"
+aws:
+  region: "eu-west-1" # must support all resources
+
+stackParameters:
+  BucketName: "fda-{{ app_name }}"

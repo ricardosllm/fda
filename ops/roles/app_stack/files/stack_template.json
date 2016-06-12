@@ -1,0 +1,28 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Face Detection App Stack",
+  "Parameters": {
+    "BucketName": {
+      "Type": "String",
+      "Description": "Name of main S3 Bucket"
+    }
+  },
+  "Resources": {
+    "ResultsBucket": {
+      "Type": "AWS::S3::Bucket",
+      "Properties": {
+        "BucketName": {
+          "Ref": "BucketName"
+        },
+        "AccessControl": "PublicRead"
+      }
+    }
+  },
+  "Outputs": {
+    "MyStacksRegion": {
+      "Value": {
+        "Ref": "AWS::Region"
+      }
+    }
+  }
+}

@@ -1,0 +1,15 @@
+---
+- name: setup fda stack
+  cloudformation:
+    stack_name: "{{ stack_name }}"
+    state: "present"
+    region: "{{ aws.region }}"
+    disable_rollback: false
+    template: "roles/app_stack/files/stack_template.json"
+    template_parameters: "{{ stackParameters }}"
+  register: "fdaStack"
+
+- name: read stack output
+  set_fact:
+    fda:
+    stack_output: "{{ fdaStack.stack_outputs }}"

@@ -3,5 +3,5 @@
   connection: "local"
   gather_facts: False
   roles:
-    - { role: "setup_env",  tags: ["always"] }
-    - { role: "app_bucket", tags: ["always"] }
+    # - { role: "setup_env",  tags: ["always"] }
+    - { role: "app_stack", tags: ["always"] }
