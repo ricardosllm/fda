@@ -5,6 +5,22 @@
     "BucketName": {
       "Type": "String",
       "Description": "Name of main S3 Bucket"
+    },
+    "IdentityPoolId": {
+      "Type": "String",
+      "Description": "Cognito Identity Pool Id"
+    },
+    "S3AccessPolicyName": {
+      "Type": "String",
+      "Description": "S3 Access Policy Name"
+    },
+    "DBAccessPolicyName": {
+      "Type": "String",
+      "Description": "DB Access Policy Name"
+    },
+    "SyncAccessPolicyName": {
+      "Type": "String",
+      "Description": "Sync Access Policy Name"
     }
   },
   "Resources": {
@@ -15,6 +31,91 @@
           "Ref": "BucketName"
         },
         "AccessControl": "PublicRead"
+      }
+    },
+    "UnAuthRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Federated": "cognito-identity.amazonaws.com"
+              },
+              "Action": "sts:AssumeRoleWithWebIdentity",
+              "Condition": {
+                "StringEquals": {
+                  "cognito-identity.amazonaws.com:aud": { "Ref": "IdentityPoolId" }
+                },
+                "ForAnyValue:StringLike": {
+                  "cognito-identity.amazonaws.com:amr": "unauthenticated"
+                }
+              }
+            }
+          ]
+        },
+        "Policies": [
+          {
+            "PolicyName": { "Ref": "S3AccessPolicyName" },
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Sid": "Stmt1452497104000",
+                  "Effect": "Allow",
+                  "Action": [
+                    "s3:PutObject",
+                    "s3:PutObjectAcl"
+                  ],
+                  "Resource": [
+                    "arn:aws:s3:::face-detection-app-ricardosllm/input/*"
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "PolicyName" : { "Ref": "DBAccessPolicyName" },
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Sid": "Stmt1452497255000",
+                  "Effect": "Allow",
+                  "Action": [
+                    "dynamodb:GetItem",
+                    "dynamodb:Query"
+                  ],
+                  "Resource": [
+                    "arn:aws:dynamodb:ap-northeast-1:820369952272:table/snapshot",
+                    "arn:aws:dynamodb:ap-northeast-1:820369952272:table/snapshot/index/cameraid-unixtimestamp-index",
+                    "arn:aws:dynamodb:ap-northeast-1:820369952272:table/resources-counter"
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "PolicyName": { "Ref": "SyncAccessPolicyName" },
+            "PolicyDocument" : {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "mobileanalytics:PutEvents",
+                    "cognito-sync:*"
+                  ],
+                  "Resource": [
+                    "*"
+                  ]
+                }
+              ]
+            }
+          }
+        ]
       }
     }
   },

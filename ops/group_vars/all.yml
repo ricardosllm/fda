@@ -10,3 +10,7 @@ identityPoolName: "fda {{ app_name | regex_replace('-', ' ') }}"
 
 stackParameters:
   BucketName: "fda-{{ app_name }}"
+  S3AccessPolicyName: "fda-{{ app_name }}-UnAuth-Role-s3-access"
+  DBAccessPolicyName: "fda-{{ app_name }}-UnAuth-Role-db-access"
+  SyncAccessPolicyName: "fda-{{ app_name }}-UnAuth-Role-sync-access"
+  IdentityPoolId: "{{ ExistingIdentityPoolId.stdout }}"
