@@ -69,9 +69,11 @@
                     "s3:PutObject",
                     "s3:PutObjectAcl"
                   ],
-                  "Resource": [
-                    "arn:aws:s3:::face-detection-app-ricardosllm/input/*"
-                  ]
+                  "Resource": [{
+                    "Fn::Join": [
+                      "", ["arn:aws:s3:::", { "Ref": "BucketName" }, "/input/*"]
+                    ]
+                  }]
                 }
               ]
             }
