@@ -37,7 +37,6 @@
 - name: stackParameters
   debug: msg={{ stackParameters }}
 
-# FIXME hardcoded on policies: s3 bucket and DDB resources
 - name: setup fda stack
   cloudformation:
     stack_name: "{{ stack_name }}"

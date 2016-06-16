@@ -14,13 +14,25 @@
       "Type": "String",
       "Description": "S3 Access Policy Name"
     },
+    "SyncAccessPolicyName": {
+      "Type": "String",
+      "Description": "Sync Access Policy Name"
+    },
     "DBAccessPolicyName": {
       "Type": "String",
       "Description": "DB Access Policy Name"
     },
-    "SyncAccessPolicyName": {
+    "SnapshotDBTableName": {
       "Type": "String",
-      "Description": "Sync Access Policy Name"
+      "Description": "Snapshot DB Table Name"
+    },
+    "ResourcesCounterDBTableName": {
+      "Type": "String",
+      "Description": "Resources Counter DB Table Name"
+    },
+    "SnapshotDBIndexName": {
+      "Type": "String",
+      "Description": "Snapshot DB Index Name"
     }
   },
   "Resources": {
@@ -31,6 +43,79 @@
           "Ref": "BucketName"
         },
         "AccessControl": "PublicRead"
+      }
+    },
+    "SnapshotDB": {
+      "Type" : "AWS::DynamoDB::Table",
+      "Properties" : {
+        "TableName" : { "Ref": "SnapshotDBTableName" },
+        "KeySchema" :  [
+          {
+            "AttributeName" : "id",
+            "KeyType" : "HASH"
+          }
+        ],
+        "AttributeDefinitions" : [
+          {
+            "AttributeName" : "id",
+            "AttributeType" : "S"
+          },
+          {
+            "AttributeName" : "cameraid",
+            "AttributeType" : "S"
+          },
+          {
+            "AttributeName" : "unixtimestamp",
+            "AttributeType" : "N"
+          }
+        ],
+        "GlobalSecondaryIndexes" : [{
+          "IndexName" : { "Ref": "SnapshotDBIndexName" },
+          "KeySchema" : [
+            {
+              "AttributeName" : "cameraid",
+              "KeyType" : "HASH"
+            },
+            {
+              "AttributeName" : "unixtimestamp",
+              "KeyType" : "RANGE"
+            }
+          ],
+          "Projection" : {
+            "NonKeyAttributes" : [],
+            "ProjectionType" : "ALL"
+          },
+          "ProvisionedThroughput" : {
+            "ReadCapacityUnits" : "5",
+            "WriteCapacityUnits" : "5"
+          }
+        }],
+        "ProvisionedThroughput" : {
+          "ReadCapacityUnits" : "5",
+          "WriteCapacityUnits" : "5"
+        }
+      }
+    },
+    "ResourcesCounterDB": {
+      "Type" : "AWS::DynamoDB::Table",
+      "Properties" : {
+        "TableName" : { "Ref": "ResourcesCounterDBTableName" },
+        "KeySchema" : [
+          {
+            "AttributeName" : "id",
+            "KeyType" : "HASH"
+          }
+        ],
+        "AttributeDefinitions" : [
+          {
+            "AttributeName" : "id",
+            "AttributeType" : "S"
+          }
+        ],
+        "ProvisionedThroughput" : {
+          "ReadCapacityUnits" : "5",
+          "WriteCapacityUnits" : "5"
+        }
       }
     },
     "UnAuthRole": {
@@ -91,9 +176,37 @@
                     "dynamodb:Query"
                   ],
                   "Resource": [
-                    "arn:aws:dynamodb:ap-northeast-1:820369952272:table/snapshot",
-                    "arn:aws:dynamodb:ap-northeast-1:820369952272:table/snapshot/index/cameraid-unixtimestamp-index",
-                    "arn:aws:dynamodb:ap-northeast-1:820369952272:table/resources-counter"
+                    {
+                      "Fn::Join": [ "",
+                                    [
+                                      "arn:aws:dynamodb:",
+                                      { "Ref": "AWS::Region" }, ":",
+                                      { "Ref": "AWS::AccountId" }, ":",
+                                      { "Ref": "SnapshotDB" }
+                                    ]
+                                  ]
+                    },
+                    {
+                      "Fn::Join": [ "",
+                                    [
+                                      "arn:aws:dynamodb:",
+                                      { "Ref": "AWS::Region" }, ":",
+                                      { "Ref": "AWS::AccountId" }, ":",
+                                      { "Ref": "SnapshotDB" }, "/",
+                                      { "Ref": "SnapshotDBIndexName"}
+                                    ]
+                                  ]
+                    },
+                    {
+                      "Fn::Join": [ "",
+                                    [
+                                      "arn:aws:dynamodb:",
+                                      { "Ref": "AWS::Region" }, ":",
+                                      { "Ref": "AWS::AccountId" }, ":",
+                                      { "Ref": "ResourcesCounterDB" }
+                                    ]
+                                  ]
+                    }
                   ]
                 }
               ]

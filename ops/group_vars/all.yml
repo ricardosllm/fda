@@ -14,3 +14,6 @@ stackParameters:
   DBAccessPolicyName: "fda-{{ app_name }}-UnAuth-Role-db-access"
   SyncAccessPolicyName: "fda-{{ app_name }}-UnAuth-Role-sync-access"
   IdentityPoolId: "{{ ExistingIdentityPoolId.stdout }}"
+  SnapshotDBTableName: "fda-{{ app_name }}-snapshot"
+  ResourcesCounterDBTableName: "fda-{{ app_name }}-resources-counter"
+  SnapshotDBIndexName: "cameraid-unixtimestamp-index"
