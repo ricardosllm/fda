@@ -61,3 +61,22 @@
     --identity-pool-id "{{ ExistingIdentityPoolId.stdout }}"
     --roles "unauthenticated={{ fdaStack.stack_outputs.UnAuthRole }}"
   when: ExistingIdentityPoolName.stdout != identityPoolName
+
+# Compile and upload engine node source to S3
+
+- name: Compile node source
+  shell: "zip -r index.zip ./index/"
+  args:
+    chdir: "../engine/"
+
+# - name: Upload engine source
+#   s3:
+#     bucket: "{{ stackParameters.BucketName }}"
+#     object: "/face-detection-engine/index.zip"
+#     src: "../engine/index.zip"
+#     mode: "put"
+
+- name: Upload node source
+  shell: 'aws s3 cp index.zip s3://{{ stackParameters.BucketName }}/face-detection-engine/'
+  args:
+    chdir: "../engine/"
