@@ -17,3 +17,4 @@ stackParameters:
   SnapshotDBTableName: "fda-{{ app_name }}-snapshot"
   ResourcesCounterDBTableName: "fda-{{ app_name }}-resources-counter"
   SnapshotDBIndexName: "cameraid-unixtimestamp-index"
+  EngineLambdaFunctionName: "fda-{{ app_name }}-engine"
