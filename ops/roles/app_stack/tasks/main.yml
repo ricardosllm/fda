@@ -32,6 +32,25 @@
 - name: ExistingIdentityPoolId.stdout
   debug: msg={{ ExistingIdentityPoolId.stdout }}
 
+# Compile and upload engine node source to S3
+
+- name: Compile node source
+  shell: "zip -r index.zip ./index/"
+  args:
+    chdir: "../engine/"
+
+# - name: Upload engine source
+#   s3:
+#     bucket: "{{ stackParameters.BucketName }}"
+#     object: "/face-detection-engine/index.zip"
+#     src: "../engine/index.zip"
+#     mode: "put"
+
+- name: Upload node source
+  shell: 'aws s3 cp index.zip s3://{{ stackParameters.BucketName }}/engine/'
+  args:
+    chdir: "../engine/"
+
 # Create or Update Cloudformation Stack
 
 - name: stackParameters
@@ -61,22 +80,3 @@
     --identity-pool-id "{{ ExistingIdentityPoolId.stdout }}"
     --roles "unauthenticated={{ fdaStack.stack_outputs.UnAuthRole }}"
   when: ExistingIdentityPoolName.stdout != identityPoolName
-
-# Compile and upload engine node source to S3
-
-- name: Compile node source
-  shell: "zip -r index.zip ./index/"
-  args:
-    chdir: "../engine/"
-
-# - name: Upload engine source
-#   s3:
-#     bucket: "{{ stackParameters.BucketName }}"
-#     object: "/face-detection-engine/index.zip"
-#     src: "../engine/index.zip"
-#     mode: "put"
-
-- name: Upload node source
-  shell: 'aws s3 cp index.zip s3://{{ stackParameters.BucketName }}/engine/'
-  args:
-    chdir: "../engine/"
