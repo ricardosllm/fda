@@ -8,8 +8,11 @@ aws:
 
 identityPoolName: "fda {{ app_name | regex_replace('-', ' ') }}"
 
+EngineBucket: "fda-{{ app_name }}-engine"
+
 stackParameters:
-  BucketName: "fda-{{ app_name }}"
+  MainBucketName: "fda-{{ app_name }}-main"
+  EngineBucketName: "{{ EngineBucket }}"
   EngineS3PolicyName: "fda-{{ app_name }}-engine-s3-policy"
   CameraS3PolicyName: "fda-{{ app_name }}-camera-s3-policy"
   DBCameraPolicyName: "fda-{{ app_name }}-db-camera-policy"
