@@ -1,14 +1,10 @@
 ---
-# Create Engine Bucket
-
 - name: Create Engine bucket
   s3:
     bucket: "{{ EngineBucket }}"
     permission: "public-read"
     region: "{{ aws.region }}"
     mode: "create"
-
-# Compile and upload engine node source to S3
 
 - name: Compile node source
   shell: "zip -r index.zip ./index/"
@@ -85,6 +81,3 @@
     --roles "unauthenticated={{ fdaStack.stack_outputs.UnAuthRole }}"
   when: ExistingIdentityPoolName.stdout != identityPoolName
 
-# due to CF circular dependencies issue notification configuration must be set seperatly
-
-# TODO: lambda S3 event notification configuration
