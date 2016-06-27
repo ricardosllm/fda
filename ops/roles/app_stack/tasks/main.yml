@@ -1,4 +1,6 @@
 ---
+# Create Engine Bucket
+
 - name: Create Engine bucket
   s3:
     bucket: "{{ EngineBucket }}"
@@ -13,18 +15,12 @@
   args:
     chdir: "../engine/"
 
-# - name: Upload engine source
-#   s3:
-#     bucket: "{{ stackParameters.BucketName }}"
-#     object: "/face-detection-engine/index.zip"
-#     src: "../engine/index.zip"
-#     mode: "put"
-
 - name: Upload node source
   shell: 'aws s3 cp index.zip s3://{{ EngineBucket }}'
   args:
     chdir: "../engine/"
 
+# Create Identity Pool
 
 - name: List Cognito Identity Pools
   command: >
@@ -78,7 +74,8 @@
   set_fact:
     fda:
     stack_output: "{{ fdaStack.stack_outputs }}"
-# Assigne newly created IAM roles to exiting Identity Pool
+
+# Assign newly created IAM roles to exiting Identity Pool
 
 - name: assign Cognito Identity Pool roles
   command: >
