@@ -111,3 +111,13 @@
     aws s3 sync ./camera s3://{{ MainBucket }}/camera
     --acl "public-read" --exclude "*._*" --exclude ".DS_Store"
     --exclude "*" --include "*.svg" --content-type "image/svg+xml"
+
+- name: Build Main bucket cors config
+  template:
+    src=cors.json
+    dest=camera/cors.json
+
+- name: Upload Main bucket cors config
+  command: >
+    aws s3api put-bucket-cors --bucket {{ MainBucket }}
+    --cors-configuration file://camera/cors.json

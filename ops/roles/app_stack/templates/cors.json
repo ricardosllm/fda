@@ -1,0 +1,15 @@
+{
+  "CORSRules": [
+    {
+      "AllowedOrigins": ["{{ MainBucket }}.s3-{{ aws.region }}.amazonaws.com"],
+      "AllowedHeaders": ["*"],
+      "AllowedMethods": ["PUT", "POST"],
+      "MaxAgeSeconds": 3000
+    },
+    {
+      "AllowedOrigins": ["*"],
+      "AllowedHeaders": ["Authorization"],
+      "AllowedMethods": ["GET"],
+      "MaxAgeSeconds": 3000
+} ]
+}
