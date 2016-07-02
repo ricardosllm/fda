@@ -80,4 +80,34 @@
     --identity-pool-id "{{ ExistingIdentityPoolId.stdout }}"
     --roles "unauthenticated={{ fdaStack.stack_outputs.UnAuthRole }}"
   when: ExistingIdentityPoolName.stdout != identityPoolName
+- name: create camera directory
+  file: state=directory path="camera"
 
+- name: empty the camera directory
+  file: path=camera state=absent
+
+- name: create camera directory
+  file: path=camera state=directory
+
+- name: copy camera source
+  git:
+    repo=https://github.com/ricardosllm/fda-camera.git
+    dest=camera
+    version=js
+
+- name: build camera config
+  template:
+    src=camera.config.js
+    dest=camera/js/app/config.js
+
+- name: upload camera app
+  command: >
+    aws s3 sync ./camera s3://{{ MainBucket }}/camera
+    --acl "public-read" --exclude "*._*" --exclude ".DS_Store"
+    --exclude "*.svg"
+
+- name: upload camera assets
+  command: >
+    aws s3 sync ./camera s3://{{ MainBucket }}/camera
+    --acl "public-read" --exclude "*._*" --exclude ".DS_Store"
+    --exclude "*" --include "*.svg" --content-type "image/svg+xml"
