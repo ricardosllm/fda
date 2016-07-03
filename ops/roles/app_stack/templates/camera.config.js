@@ -8,6 +8,7 @@ define([], function(){
 
     },
     defaultCameraId : "{{ app_name }}-camera-id",
+    defaultCameraName : "{{ camera_name }}",
     durationBtwSnap : 5400
   };
   return c;

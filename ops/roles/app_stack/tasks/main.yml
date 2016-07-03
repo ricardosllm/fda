@@ -67,9 +67,7 @@
   register: "fdaStack"
 
 - name: read stack output
-  set_fact:
-    fda:
-    stack_output: "{{ fdaStack.stack_outputs }}"
+  debug: msg="{{ fdaStack.stack_outputs }}"
 
 # Assign newly created IAM roles to exiting Identity Pool
 
@@ -78,10 +76,11 @@
     aws cognito-identity
     set-identity-pool-roles
     --identity-pool-id "{{ ExistingIdentityPoolId.stdout }}"
-    --roles "unauthenticated={{ fdaStack.stack_outputs.UnAuthRole }}"
-  when: ExistingIdentityPoolName.stdout != identityPoolName
-- name: create camera directory
-  file: state=directory path="camera"
+    --roles "unauthenticated={{ fdaStack.stack_outputs.UnAuthRole }},
+             authenticated={{ fdaStack.stack_outputs.AuthRole }}"
+  # when: ExistingIdentityPoolName.stdout != identityPoolName
+
+# Camera App
 
 - name: empty the camera directory
   file: path=camera state=absent
@@ -93,7 +92,7 @@
   git:
     repo=https://github.com/ricardosllm/fda-camera.git
     dest=camera
-    version=js
+    version=master
 
 - name: build camera config
   template:

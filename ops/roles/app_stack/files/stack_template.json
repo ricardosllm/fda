@@ -52,9 +52,8 @@
     },
     "EngineLambdaFunctionName": {
       "Type": "String",
-      "Description": "Snapshot DB Index Name"
+      "Description": "Engine Lambda Function Name"
     }
-
   },
   "Resources": {
     "EngineLambdaFunction": {
@@ -108,20 +107,7 @@
         }
       },
       "Metadata": {
-        "NotificationConfiguration": {
-          "LambdaConfigurations": [{
-            "Event": "s3:ObjectCreated:*",
-            "Filter" : {
-              "S3Key": {
-                "Rules": [
-                  { "Name": "prefix", "Value": "input/" },
-                  { "Name": "suffix", "Value": ".png" }
-                ]
-              }
-            },
-            "Function" : { "Fn::GetAtt": [ "EngineLambdaFunction", "Arn" ] }
-          }]
-        }
+        "key": "value"
       }
     },
     "SnapshotDB": {
@@ -215,6 +201,31 @@
                 },
                 "ForAnyValue:StringLike": {
                   "cognito-identity.amazonaws.com:amr": "unauthenticated"
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "CameraAuthRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Federated": "cognito-identity.amazonaws.com"
+              },
+              "Action": "sts:AssumeRoleWithWebIdentity",
+              "Condition": {
+                "StringEquals": {
+                  "cognito-identity.amazonaws.com:aud": { "Ref": "IdentityPoolId" }
+                },
+                "ForAnyValue:StringLike": {
+                  "cognito-identity.amazonaws.com:amr": "authenticated"
                 }
               }
             }
@@ -453,10 +464,11 @@
     }
   },
   "Outputs": {
-    "MyStacksRegion": {
-      "Value": {
-        "Ref": "AWS::Region"
-      }
+    "UnAuthRole": {
+      "Value": { "Fn::GetAtt" : [ "CameraUnAuthRole", "Arn" ] }
+    },
+    "AuthRole": {
+      "Value": { "Fn::GetAtt" : [ "CameraAuthRole", "Arn" ] }
     }
   }
 }
