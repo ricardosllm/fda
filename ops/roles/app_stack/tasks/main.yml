@@ -6,15 +6,37 @@
     region: "{{ aws.region }}"
     mode: "create"
 
+- name: empty the engine directory
+  file: path=engine state=absent
+
+- name: create engine directory
+  file: path=engine state=directory
+
+- name: copy engine source
+  git:
+    repo=https://github.com/ricardosllm/fda-engine.git
+    dest=engine
+    version=master
+
+- name: engine - npm install
+  shell: 'npm install'
+  args:
+    chdir: "engine/index"
+
+- name: build engine config
+  template:
+    src=engine.config.js
+    dest=engine/index/config.js
+
 - name: Compile node source
   shell: "zip -r index.zip ./index/"
   args:
-    chdir: "../engine/"
+    chdir: "engine"
 
 - name: Upload node source
   shell: 'aws s3 cp index.zip s3://{{ EngineBucket }}'
   args:
-    chdir: "../engine/"
+    chdir: "engine"
 
 # Create Identity Pool
 
