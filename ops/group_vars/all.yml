@@ -13,6 +13,9 @@ MainBucket: "fda-{{ app_name }}-main"
 
 camera_name: "{{ app_name }}"
 
+db_snapshot: "snapshot"
+db_resources_counter: "resources-counter"
+
 stackParameters:
   MainBucketName: "{{ MainBucket }}"
   EngineBucketName: "{{ EngineBucket }}"
@@ -23,7 +26,9 @@ stackParameters:
   SyncAccessPolicyName: "fda-{{ app_name }}-sync-access-policy"
   EngineLogPolicyName: "fda-{{ app_name }}-engine-log-policy"
   IdentityPoolId: "{{ ExistingIdentityPoolId.stdout }}"
-  SnapshotDBTableName: "fda-{{ app_name }}-snapshot"
-  ResourcesCounterDBTableName: "fda-{{ app_name }}-resources-counter"
+  DBResourcesCounter: "{{ db_resources_counter }}"
+  DBSnapshot: "{{ db_snapshot }}"
+  SnapshotDBTableName: "fda-{{ app_name }}-{{ db_snapshot }}"
+  ResourcesCounterDBTableName: "fda-{{ app_name }}-{{ db_resources_counter }}"
   SnapshotDBIndexName: "cameraid-unixtimestamp-index"
   EngineLambdaFunctionName: "fda-{{ app_name }}-engine"
