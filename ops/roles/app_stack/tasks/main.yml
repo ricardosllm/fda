@@ -18,15 +18,13 @@
     dest=engine
     version=master
 
-- name: engine - npm install
-  shell: 'npm install'
-  args:
-    chdir: "engine/index"
-
 - name: build engine config
   template:
     src=engine.config.js
     dest=engine/index/config.js
+
+- name: Remove config example
+  file: path=engine/index/config.js.example state=absent
 
 - name: Compile node source
   shell: "zip -r index.zip ./index/"
