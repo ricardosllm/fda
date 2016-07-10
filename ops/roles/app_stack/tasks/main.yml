@@ -140,3 +140,34 @@
   command: >
     aws s3api put-bucket-cors --bucket {{ MainBucket }}
     --cors-configuration file://camera/cors.json
+
+# Facewall App
+
+- name: empty the facewall directory
+  file: path=facewall state=absent
+
+- name: create facewall directory
+  file: path=facewall state=directory
+
+- name: copy facewall source
+  git:
+    repo=https://github.com/ricardosllm/fda-facewall.git
+    dest=facewall
+    version=master
+
+- name: build facewall config
+  template:
+    src=facewall.config.js
+    dest=facewall/js/app/config.js
+
+- name: upload facewall app
+  command: >
+    aws s3 sync ./facewall s3://{{ MainBucket }}/facewall
+    --acl "public-read" --exclude "*._*" --exclude ".DS_Store"
+    --exclude "*.svg"
+
+- name: upload facewall assets
+  command: >
+    aws s3 sync ./facewall s3://{{ MainBucket }}/facewall
+    --acl "public-read" --exclude "*._*" --exclude ".DS_Store"
+    --exclude "*" --include "*.svg" --content-type "image/svg+xml"
