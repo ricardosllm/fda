@@ -98,7 +98,6 @@
     --identity-pool-id "{{ ExistingIdentityPoolId.stdout }}"
     --roles "unauthenticated={{ fdaStack.stack_outputs.UnAuthRole }},
              authenticated={{ fdaStack.stack_outputs.AuthRole }}"
-  # when: ExistingIdentityPoolName.stdout != identityPoolName
 
 # Camera App
 
