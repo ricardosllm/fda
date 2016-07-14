@@ -36,7 +36,7 @@
   args:
     chdir: "engine"
 
-# Create Identity Pool
+# Create or register Identity Pool
 
 - name: List Cognito Identity Pools
   command: >
