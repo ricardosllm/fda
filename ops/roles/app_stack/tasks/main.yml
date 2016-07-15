@@ -170,3 +170,6 @@
     aws s3 sync ./facewall s3://{{ MainBucket }}/facewall
     --acl "public-read" --exclude "*._*" --exclude ".DS_Store"
     --exclude "*" --include "*.svg" --content-type "image/svg+xml"
+
+# TODO: Fix error with facewall db access
+# TODO: Update camera and facewall page title
