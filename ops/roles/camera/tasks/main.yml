@@ -1,28 +1,28 @@
 ---
-- name: empty the camera directory
+- name: empty directory
   file: path=camera state=absent
 
-- name: create camera directory
+- name: create directory
   file: path=camera state=directory
 
-- name: copy camera source
+- name: copy source
   git:
     repo=https://github.com/ricardosllm/fda-camera.git
     dest=camera
     version=master
 
-- name: build camera config
+- name: build config
   template:
     src=camera.config.js
     dest=camera/js/app/config.js
 
-- name: upload camera app
+- name: upload app
   command: >
     aws s3 sync ./camera s3://{{ MainBucket }}/camera
     --acl "public-read" --exclude "*._*" --exclude ".DS_Store"
     --exclude "*.svg"
 
-- name: upload camera assets
+- name: upload assets
   command: >
     aws s3 sync ./camera s3://{{ MainBucket }}/camera
     --acl "public-read" --exclude "*._*" --exclude ".DS_Store"
