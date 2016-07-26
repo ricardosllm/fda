@@ -1,29 +1,29 @@
 ---
-- name: Create Engine bucket
+- name: Create bucket
   s3:
     bucket: "{{ EngineBucket }}"
     permission: "public-read"
     region: "{{ aws.region }}"
     mode: "create"
 
-- name: empty the engine directory
+- name: empty directory
   file: path=engine state=absent
 
-- name: create engine directory
+- name: create directory
   file: path=engine state=directory
 
-- name: copy engine source
+- name: copy source
   git:
     repo=https://github.com/ricardosllm/fda-engine.git
     dest=engine
     version=master
 
-- name: build engine config
+- name: build config
   template:
     src=engine.config.js
     dest=engine/index/config.js
 
-- name: Remove config example
+- name: Remove example
   file: path=engine/index/config.js.example state=absent
 
 - name: Compile node source
