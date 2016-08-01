@@ -1,0 +1,488 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Face Detection App Stack",
+  "Parameters": {
+    "MainBucketName": {
+      "Type": "String",
+      "Description": "Name of main S3 Bucket"
+    },
+    "EngineBucketName": {
+      "Type": "String",
+      "Description": "Name of engine S3 Bucket"
+    },
+    "IdentityPoolId": {
+      "Type": "String",
+      "Description": "Cognito Identity Pool Id"
+    },
+    "EngineS3PolicyName": {
+      "Type": "String",
+      "Description": "Engine S3 Access Policy Name"
+    },
+    "CameraS3PolicyName": {
+      "Type": "String",
+      "Description": "Camera S3 Access Policy Name"
+    },
+    "SyncAccessPolicyName": {
+      "Type": "String",
+      "Description": "Sync Access Policy Name"
+    },
+    "DBEnginePolicyName": {
+      "Type": "String",
+      "Description": "DB Engine Policy Name"
+    },
+    "DBCameraPolicyName": {
+      "Type": "String",
+      "Description": "DB Camera Policy Name"
+    },
+    "SnapshotDBTableName": {
+      "Type": "String",
+      "Description": "Snapshot DB Table Name"
+    },
+    "EngineLogPolicyName": {
+      "Type": "String",
+      "Description": "Engine Log Policy Name"
+    },
+    "ResourcesCounterDBTableName": {
+      "Type": "String",
+      "Description": "Resources Counter DB Table Name"
+    },
+    "SnapshotDBIndexName": {
+      "Type": "String",
+      "Description": "Snapshot DB Index Name"
+    },
+    "EngineLambdaFunctionName": {
+      "Type": "String",
+      "Description": "Engine Lambda Function Name"
+    },
+    "DBSnapshot": {
+      "Type": "String",
+      "Description": "Snapshot DB name"
+    },
+    "DBResourcesCounter": {
+      "Type": "String",
+      "Description": "Resouces Counter DB Name"
+    }
+  },
+  "Resources": {
+    "EngineLambdaFunction": {
+      "Type" : "AWS::Lambda::Function",
+      "Properties" : {
+        "Code" : {
+          "S3Bucket" : { "Ref": "EngineBucketName" },
+          "S3Key" : "index.zip"
+        },
+        "Description" : "Engine Lambda Function",
+        "FunctionName" : { "Ref": "EngineLambdaFunctionName" },
+        "Handler" : "index.handler",
+        "MemorySize" : "256",
+        "Role" : { "Fn::GetAtt" : [ "EngineRole", "Arn" ] },
+        "Runtime" : "nodejs",
+        "Timeout" : "30"
+      }
+    },
+    "EngineExecutePermission": {
+      "Type" : "AWS::Lambda::Permission",
+      "Properties" : {
+        "Action": "lambda:invokeFunction",
+        "FunctionName": { "Fn::GetAtt": [ "EngineLambdaFunction", "Arn" ] },
+        "Principal": "s3.amazonaws.com",
+        "SourceAccount": { "Ref" : "AWS::AccountId" },
+        "SourceArn": {
+          "Fn::Join": [
+            ":", [ "arn","aws","s3","", "", { "Ref" : "MainBucket" } ]
+          ]
+        }
+      }
+    },
+    "MainBucket": {
+      "Type": "AWS::S3::Bucket",
+      "Properties": {
+        "BucketName": { "Ref": "MainBucketName" },
+        "AccessControl": "PublicRead",
+        "NotificationConfiguration": {
+          "LambdaConfigurations": [{
+            "Event": "s3:ObjectCreated:*",
+            "Filter" : {
+              "S3Key": {
+                "Rules": [
+                  { "Name": "prefix", "Value": "input/" },
+                  { "Name": "suffix", "Value": ".png" }
+                ]
+              }
+            },
+            "Function" : { "Fn::GetAtt": [ "EngineLambdaFunction", "Arn" ] }
+          }]
+        }
+      },
+      "Metadata": {
+        "key": "value"
+      }
+    },
+    "SnapshotDB": {
+      "Type" : "AWS::DynamoDB::Table",
+      "Properties" : {
+        "TableName" : { "Ref": "SnapshotDBTableName" },
+        "KeySchema" :  [
+          {
+            "AttributeName" : "id",
+            "KeyType" : "HASH"
+          }
+        ],
+        "AttributeDefinitions" : [
+          {
+            "AttributeName" : "id",
+            "AttributeType" : "S"
+          },
+          {
+            "AttributeName" : "cameraid",
+            "AttributeType" : "S"
+          },
+          {
+            "AttributeName" : "unixtimestamp",
+            "AttributeType" : "N"
+          }
+        ],
+        "GlobalSecondaryIndexes" : [{
+          "IndexName" : { "Ref": "SnapshotDBIndexName" },
+          "KeySchema" : [
+            {
+              "AttributeName" : "cameraid",
+              "KeyType" : "HASH"
+            },
+            {
+              "AttributeName" : "unixtimestamp",
+              "KeyType" : "RANGE"
+            }
+          ],
+          "Projection" : {
+            "NonKeyAttributes" : [],
+            "ProjectionType" : "ALL"
+          },
+          "ProvisionedThroughput" : {
+            "ReadCapacityUnits" : "5",
+            "WriteCapacityUnits" : "5"
+          }
+        }],
+        "ProvisionedThroughput" : {
+          "ReadCapacityUnits" : "5",
+          "WriteCapacityUnits" : "5"
+        }
+      }
+    },
+    "ResourcesCounterDB": {
+      "Type" : "AWS::DynamoDB::Table",
+      "Properties" : {
+        "TableName" : { "Ref": "ResourcesCounterDBTableName" },
+        "KeySchema" : [
+          {
+            "AttributeName" : "id",
+            "KeyType" : "HASH"
+          }
+        ],
+        "AttributeDefinitions" : [
+          {
+            "AttributeName" : "id",
+            "AttributeType" : "S"
+          }
+        ],
+        "ProvisionedThroughput" : {
+          "ReadCapacityUnits" : "5",
+          "WriteCapacityUnits" : "5"
+        }
+      }
+    },
+    "CameraUnAuthRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Federated": "cognito-identity.amazonaws.com"
+              },
+              "Action": "sts:AssumeRoleWithWebIdentity",
+              "Condition": {
+                "StringEquals": {
+                  "cognito-identity.amazonaws.com:aud": { "Ref": "IdentityPoolId" }
+                },
+                "ForAnyValue:StringLike": {
+                  "cognito-identity.amazonaws.com:amr": "unauthenticated"
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "CameraAuthRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Federated": "cognito-identity.amazonaws.com"
+              },
+              "Action": "sts:AssumeRoleWithWebIdentity",
+              "Condition": {
+                "StringEquals": {
+                  "cognito-identity.amazonaws.com:aud": { "Ref": "IdentityPoolId" }
+                },
+                "ForAnyValue:StringLike": {
+                  "cognito-identity.amazonaws.com:amr": "authenticated"
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "EngineRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        }
+      }
+    },
+    "EngineS3Policy": {
+      "Type" : "AWS::IAM::Policy",
+      "Properties" : {
+        "PolicyName": { "Ref": "EngineS3PolicyName" },
+        "Roles": [
+          { "Ref": "EngineRole" }
+        ],
+        "PolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "Stmt1452497104000",
+              "Effect": "Allow",
+              "Action": [
+                "s3:PutObject",
+                "s3:PutObjectAcl"
+              ],
+              "Resource": [{
+                "Fn::Join": [
+                  "", ["arn:aws:s3:::", { "Ref": "MainBucket" }, "/output/*"]
+                ]
+              }]
+            },
+            {
+              "Sid": "Stmt1452497104001",
+              "Effect": "Allow",
+              "Action": [
+                "s3:GetObject"
+              ],
+              "Resource": [{
+                "Fn::Join": [
+                  "", ["arn:aws:s3:::", { "Ref": "MainBucket" }, "/input/*"]
+                ]
+              }]
+            }
+          ]
+        }
+      }
+    },
+    "CameraS3Policy": {
+      "Type" : "AWS::IAM::Policy",
+      "Properties" : {
+        "PolicyName": { "Ref": "CameraS3PolicyName" },
+        "Roles": [
+          { "Ref": "CameraUnAuthRole" }
+        ],
+        "PolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "Stmt1452497104000",
+              "Effect": "Allow",
+              "Action": [
+                "s3:PutObject",
+                "s3:PutObjectAcl"
+              ],
+              "Resource": [{
+                "Fn::Join": [
+                  "", ["arn:aws:s3:::", { "Ref": "MainBucket" }, "/input/*"]
+                ]
+              }]
+            }
+          ]
+        }
+      }
+    },
+    "DBEnginePolicy": {
+      "Type" : "AWS::IAM::Policy",
+      "Properties" : {
+        "PolicyName": { "Ref": "DBEnginePolicyName" },
+        "Roles": [
+          { "Ref": "EngineRole" }
+        ],
+        "PolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "Stmt1452497255000",
+              "Effect": "Allow",
+              "Action": [
+                "dynamodb:PutItem",
+                "dynamodb:UpdateItem"
+              ],
+              "Resource": [
+                {
+                  "Fn::Join": [ "",
+                                [
+                                  "arn:aws:dynamodb:",
+                                  { "Ref": "AWS::Region" }, ":",
+                                  { "Ref": "AWS::AccountId" }, ":",
+                                  "table", "/",
+                                  { "Ref": "SnapshotDBTableName" }
+                                ]
+                              ]
+                },
+                {
+                  "Fn::Join": [ "",
+                                [
+                                  "arn:aws:dynamodb:",
+                                  { "Ref": "AWS::Region" }, ":",
+                                  { "Ref": "AWS::AccountId" }, ":",
+                                  "table", "/",
+                                  { "Ref": "ResourcesCounterDBTableName" }
+                                ]
+                              ]
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "DBCameraPolicy": {
+      "Type" : "AWS::IAM::Policy",
+      "Properties" : {
+        "PolicyName": { "Ref": "DBCameraPolicyName" },
+        "Roles": [
+          { "Ref": "CameraUnAuthRole" }
+        ],
+        "PolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "Stmt1452497255000",
+              "Effect": "Allow",
+              "Action": [
+                "dynamodb:GetItem",
+                "dynamodb:Query"
+              ],
+              "Resource": [
+                {
+                  "Fn::Join": [ "",
+                                [
+                                  "arn:aws:dynamodb:",
+                                  { "Ref": "AWS::Region" }, ":",
+                                  { "Ref": "AWS::AccountId" }, ":",
+                                  "table", "/",
+                                  { "Ref": "SnapshotDBTableName" }
+                                ]
+                              ]
+                },
+                {
+                  "Fn::Join": [ "",
+                                [
+                                  "arn:aws:dynamodb:",
+                                  { "Ref": "AWS::Region" }, ":",
+                                  { "Ref": "AWS::AccountId" }, ":",
+                                  "table", "/",
+                                  { "Ref": "SnapshotDBTableName" }, "/",
+                                  "index", "/",
+                                  { "Ref": "SnapshotDBIndexName"}
+                                ]
+                              ]
+                },
+                {
+                  "Fn::Join": [ "",
+                                [
+                                  "arn:aws:dynamodb:",
+                                  { "Ref": "AWS::Region" }, ":",
+                                  { "Ref": "AWS::AccountId" }, ":",
+                                  "table", "/",
+                                  { "Ref": "ResourcesCounterDBTableName" }
+                                ]
+                              ]
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "SyncAccessPolicy": {
+      "Type" : "AWS::IAM::Policy",
+      "Properties" : {
+        "PolicyName": { "Ref": "SyncAccessPolicyName" },
+        "Roles": [
+          { "Ref": "CameraUnAuthRole" }
+        ],
+        "PolicyDocument" : {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Action": [
+                "mobileanalytics:PutEvents",
+                "cognito-sync:*"
+              ],
+              "Resource": [
+                "*"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "EngineLogPolicy": {
+      "Type" : "AWS::IAM::Policy",
+      "Properties" : {
+        "PolicyName": { "Ref": "EngineLogPolicyName" },
+        "Roles": [
+          { "Ref": "EngineRole" }
+        ],
+        "PolicyDocument" : {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Action": [
+                "logs:CreateLogGroup",
+                "logs:CreateLogStream",
+                "logs:PutLogEvents"
+              ],
+              "Resource": "arn:aws:logs:*:*:*"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "Outputs": {
+    "UnAuthRole": {
+      "Value": { "Fn::GetAtt" : [ "CameraUnAuthRole", "Arn" ] }
+    },
+    "AuthRole": {
+      "Value": { "Fn::GetAtt" : [ "CameraAuthRole", "Arn" ] }
+    }
+  }
+}
