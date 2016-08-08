@@ -3,6 +3,6 @@
   connection: "local"
   gather_facts: False
   roles:
-    # - { role: "setup_env",  tags: ["always"] }
     - { role: "engine", tags: ["engine"] }
+    - { role: "cognito", tags: ["cognito"] }
     - { role: "app_stack", tags: ["always"] }
