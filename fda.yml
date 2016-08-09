@@ -5,4 +5,5 @@
   roles:
     - { role: "engine", tags: ["engine"] }
     - { role: "cognito", tags: ["cognito"] }
+    - { role: "stack", tags: ["stack"] }
     - { role: "app_stack", tags: ["always"] }
