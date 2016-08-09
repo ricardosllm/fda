@@ -4,8 +4,9 @@ define([], function(){
     AWS : {
       identityPoolId: "{{ ExistingIdentityPoolId.stdout }}",
       region: "{{ aws.region }}",
-      s3RawBucket : "{{ MainBucket }}"
-
+      s3RawBucket : "{{ MainBucket }}",
+      resourcesCountTable : "fda-{{ app_name }}-resources-counter",
+      snapshotTable : "fda-{{ app_name }}-snapshot"
     },
     defaultCameraId : "{{ app_name }}-camera-id",
     defaultCameraName : "{{ camera_name }}",
