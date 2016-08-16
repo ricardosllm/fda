@@ -8,7 +8,7 @@
     state: "present"
     region: "{{ aws.region }}"
     disable_rollback: false
-    template: "roles/app_stack/files/stack_template.json"
+    template: "roles/stack/files/stack_template.json"
     template_parameters: "{{ stackParameters }}"
   register: "fdaStack"
 
